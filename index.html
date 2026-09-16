@@ -3,16 +3,124 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My First Codex Project</title>
+  <meta name="description" content="在浏览器本地分析音频的 LUFS、True Peak 和 Loudness Range。">
+  <title>Audio Loudness Analyzer</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="card">
-    <h1>My First Codex Project</h1>
-    <button id="test-button" type="button">点击测试</button>
-    <p id="message" aria-live="polite"></p>
+  <main class="app-shell">
+    <header class="hero">
+      <p class="version">Audio Tool · v1</p>
+      <h1>Audio Loudness Analyzer</h1>
+      <p class="subtitle">本地音频响度分析工具</p>
+    </header>
+
+    <section class="upload-panel" aria-labelledby="upload-title">
+      <div class="upload-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" role="img">
+          <path d="M9 18V5l10-2v13"></path>
+          <circle cx="6" cy="18" r="3"></circle>
+          <circle cx="16" cy="16" r="3"></circle>
+        </svg>
+      </div>
+      <div>
+        <h2 id="upload-title">选择需要分析的音频</h2>
+        <p>支持 WAV、MP3、FLAC</p>
+      </div>
+      <button class="file-button" id="choose-file" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"></path>
+        </svg>
+        选择音频文件
+      </button>
+      <input
+        id="audio-file"
+        class="visually-hidden"
+        type="file"
+        accept=".wav,.mp3,.flac,audio/wav,audio/x-wav,audio/mpeg,audio/flac,audio/x-flac"
+      >
+      <p class="privacy-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z"></path>
+        </svg>
+        音频仅在此浏览器中处理，不会上传到服务器
+      </p>
+    </section>
+
+    <section class="status-panel" id="status-panel" data-state="idle" aria-live="polite">
+      <span class="status-indicator" aria-hidden="true"></span>
+      <span id="status-text">请选择一个音频文件开始分析</span>
+    </section>
+
+    <p class="error-message" id="error-message" role="alert" hidden></p>
+
+    <section class="file-panel" id="file-panel" aria-labelledby="file-label" hidden>
+      <div class="file-badge" aria-hidden="true">♪</div>
+      <div class="file-copy">
+        <span id="file-label">当前文件</span>
+        <strong id="file-name"></strong>
+      </div>
+    </section>
+
+    <section class="results" id="results" aria-labelledby="results-title" hidden>
+      <div class="results-heading">
+        <div>
+          <p class="section-kicker">Measurement</p>
+          <h2 id="results-title">分析结果</h2>
+        </div>
+        <span class="local-badge">LOCAL</span>
+      </div>
+
+      <article class="metric-card metric-card--primary">
+        <p>Integrated LUFS</p>
+        <div class="metric-reading metric-reading--primary">
+          <span id="integrated-value">--</span>
+          <span class="metric-unit">LUFS</span>
+        </div>
+      </article>
+
+      <div class="metric-grid">
+        <article class="metric-card">
+          <p>True Peak</p>
+          <div class="metric-reading">
+            <span id="true-peak-value">--</span>
+            <span class="metric-unit">dBTP</span>
+          </div>
+        </article>
+
+        <article class="metric-card">
+          <p>LRA</p>
+          <div class="metric-reading">
+            <span id="lra-value">--</span>
+            <span class="metric-unit">LU</span>
+          </div>
+        </article>
+
+        <article class="metric-card">
+          <p>Duration</p>
+          <div class="metric-reading">
+            <span id="duration-value">--</span>
+          </div>
+        </article>
+
+        <article class="metric-card">
+          <p>Sample Rate</p>
+          <div class="metric-reading">
+            <span id="sample-rate-value">--</span>
+            <span class="metric-unit">Hz</span>
+          </div>
+        </article>
+
+        <article class="metric-card">
+          <p>Channels</p>
+          <div class="metric-reading">
+            <span id="channels-value">--</span>
+          </div>
+        </article>
+      </div>
+    </section>
   </main>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>
