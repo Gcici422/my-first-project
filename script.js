@@ -1,5 +1,4 @@
 import decode from "https://esm.sh/@audio/decode@3.15.0";
-import { lufs, truepeak, lra } from "https://esm.sh/@audio/loudness@1.2.1";
 
 const supportedExtensions = new Set(["wav", "mp3", "flac"]);
 
@@ -43,7 +42,7 @@ elements.fileInput.addEventListener("change", async (event) => {
   }
 
   setBusy(true);
-  setStatus("正在分析……", "loading");
+  setStatus("正在解码音频…", "loading");
 
   try {
     await waitForPaint();
@@ -57,18 +56,19 @@ elements.fileInput.addEventListener("change", async (event) => {
     const channelCount = channelData.length;
     const duration = channelData[0].length / sampleRate;
 
-    const integratedLoudness = lufs(channelData, { fs: sampleRate });
-    const truePeak = truepeak(channelData, { fs: sampleRate });
-    const loudnessRange = lra(channelData, { fs: sampleRate });
+    elements.durationValue.textContent = formatDuration(duration);
+    elements.sampleRateValue.textContent = sampleRate.toLocaleString("zh-CN");
+    elements.channelsValue.textContent = String(channelCount);
+    elements.results.hidden = false;
+
+    const { integratedLoudness, truePeak, loudnessRange } = await analyzeInWorker(
+      channelData,
+      sampleRate,
+    );
 
     elements.integratedValue.textContent = formatMetric(integratedLoudness);
     elements.truePeakValue.textContent = formatMetric(truePeak);
     elements.lraValue.textContent = formatMetric(loudnessRange);
-    elements.durationValue.textContent = formatDuration(duration);
-    elements.sampleRateValue.textContent = sampleRate.toLocaleString("zh-CN");
-    elements.channelsValue.textContent = String(channelCount);
-
-    elements.results.hidden = false;
     setStatus("分析完成", "success");
   } catch (error) {
     console.error("Audio analysis failed:", error);
@@ -93,6 +93,60 @@ function isValidAudioData(channelData, sampleRate) {
     Number.isFinite(sampleRate) &&
     sampleRate > 0
   );
+}
+
+function analyzeInWorker(channelData, sampleRate) {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker("./audio-worker.js", { type: "module" });
+    let isFinished = false;
+
+    const finish = (callback) => {
+      if (isFinished) {
+        return;
+      }
+
+      isFinished = true;
+      worker.terminate();
+      callback();
+    };
+
+    worker.addEventListener("message", (event) => {
+      const { type, message, results } = event.data ?? {};
+
+      if (type === "progress" && typeof message === "string") {
+        setStatus(message, "loading");
+        return;
+      }
+
+      if (type === "result") {
+        finish(() => resolve(results));
+        return;
+      }
+
+      if (type === "error") {
+        finish(() => reject(new Error(message || "Audio analysis worker failed.")));
+      }
+    });
+
+    worker.addEventListener("error", (event) => {
+      finish(() => reject(new Error(event.message || "Unable to start audio analysis worker.")));
+    });
+
+    const transferList = [...new Set(channelData.map((channel) => channel.buffer))];
+
+    try {
+      worker.postMessage(
+        {
+          type: "analyze",
+          channelData,
+          sampleRate,
+        },
+        transferList,
+      );
+    } catch (error) {
+      finish(() => reject(error));
+    }
+  });
 }
 
 function formatMetric(value) {
