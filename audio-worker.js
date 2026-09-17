@@ -1,7 +1,12 @@
 import { lufs, truepeak, lra } from "https://esm.sh/@audio/loudness@1.2.1";
 
 self.addEventListener("message", (event) => {
-  const { type, channelData, sampleRate } = event.data ?? {};
+  const {
+    type,
+    analysisId,
+    channelData,
+    sampleRate,
+  } = event.data ?? {};
 
   if (type !== "analyze") {
     return;
@@ -12,17 +17,18 @@ self.addEventListener("message", (event) => {
 
     const options = { fs: sampleRate };
 
-    reportProgress("正在计算响度…");
+    reportProgress(analysisId, "lufs", "正在计算综合响度…");
     const integratedLoudness = lufs(channelData, options);
 
-    reportProgress("正在计算 True Peak…");
+    reportProgress(analysisId, "truepeak", "正在计算 True Peak…");
     const truePeak = truepeak(channelData, options);
 
-    reportProgress("正在计算 LRA…");
+    reportProgress(analysisId, "lra", "正在计算 LRA…");
     const loudnessRange = lra(channelData, options);
 
     self.postMessage({
       type: "result",
+      analysisId,
       results: {
         integratedLoudness,
         truePeak,
@@ -32,13 +38,14 @@ self.addEventListener("message", (event) => {
   } catch (error) {
     self.postMessage({
       type: "error",
+      analysisId,
       message: error instanceof Error ? error.message : "Audio analysis failed.",
     });
   }
 });
 
-function reportProgress(message) {
-  self.postMessage({ type: "progress", message });
+function reportProgress(analysisId, stage, message) {
+  self.postMessage({ type: "progress", analysisId, stage, message });
 }
 
 function validateAudioData(channelData, sampleRate) {

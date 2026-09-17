@@ -10,7 +10,7 @@
 <body>
   <main class="app-shell">
     <header class="hero">
-      <p class="version">Audio Tool · v1</p>
+      <p class="version">Audio Tool · v1.2</p>
       <h1>Audio Loudness Analyzer</h1>
       <p class="subtitle">本地音频响度分析工具</p>
     </header>
@@ -50,6 +50,46 @@
     <section class="status-panel" id="status-panel" data-state="idle" aria-live="polite">
       <span class="status-indicator" aria-hidden="true"></span>
       <span id="status-text">请选择一个音频文件开始分析</span>
+    </section>
+
+    <section class="analysis-progress" id="analysis-progress" aria-labelledby="progress-title" hidden>
+      <div class="progress-heading">
+        <h2 id="progress-title">分析进度</h2>
+        <button class="cancel-button" id="cancel-analysis" type="button" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18"></path>
+          </svg>
+          取消分析
+        </button>
+      </div>
+      <div class="stage-scroll">
+        <ol class="stage-list" aria-label="分析阶段">
+          <li class="stage-step" data-progress-stage="read">
+            <span class="stage-marker" aria-hidden="true">1</span>
+            <span>读取</span>
+          </li>
+          <li class="stage-step" data-progress-stage="decode">
+            <span class="stage-marker" aria-hidden="true">2</span>
+            <span>解码</span>
+          </li>
+          <li class="stage-step" data-progress-stage="lufs">
+            <span class="stage-marker" aria-hidden="true">3</span>
+            <span>LUFS</span>
+          </li>
+          <li class="stage-step" data-progress-stage="truepeak">
+            <span class="stage-marker" aria-hidden="true">4</span>
+            <span>True Peak</span>
+          </li>
+          <li class="stage-step" data-progress-stage="lra">
+            <span class="stage-marker" aria-hidden="true">5</span>
+            <span>LRA</span>
+          </li>
+          <li class="stage-step" data-progress-stage="complete">
+            <span class="stage-marker" aria-hidden="true">6</span>
+            <span>完成</span>
+          </li>
+        </ol>
+      </div>
     </section>
 
     <p class="error-message" id="error-message" role="alert" hidden></p>
